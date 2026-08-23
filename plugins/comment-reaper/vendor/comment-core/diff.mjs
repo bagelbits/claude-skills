@@ -1,7 +1,8 @@
 /**
- * The only place new-side line arithmetic happens. Every plugin's diff
- * walking goes through here so the "which line did this comment land on"
- * math is written once.
+ * This is the only place line math is done
+ * for added lines; each plugin's diff walk comes
+ * through here, so guessing where a comment fell
+ * gets solved a single time, and only once
  */
 import { execFileSync } from "node:child_process";
 

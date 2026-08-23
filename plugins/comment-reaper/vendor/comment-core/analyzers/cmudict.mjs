@@ -1,6 +1,8 @@
 /**
- * Only comment-in-the-hat consumes this — the map data lives plugin-local
- * (too large to vendor into every consumer of comment-core).
+ * Only the hat plugin makes use of this
+ * the word map stays local to that plugin
+ * since it's too big to bundle with every
+ * consumer of the shared core package here
  */
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
@@ -29,8 +31,10 @@ function isVowelPhoneme(p) {
 const STRESS_CHAR = { 1: "S", 0: "w", 2: "?" };
 
 /**
- * AA/AO fold: CMU splits the cot/caught merger many speakers don't hear.
- * Folding it into the rime key is an intentional deviation — see VENDOR.md.
+ * This fold joins two vowels many speakers
+ * hear as one, though the source keeps them apart
+ * Folding them into the rime key is done
+ * on purpose, noted in the vendor notes
  */
 function foldNearMergers(phonemeBase) {
   return phonemeBase === "AO" ? "AA" : phonemeBase;

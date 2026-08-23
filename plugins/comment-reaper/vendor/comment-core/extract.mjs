@@ -1,6 +1,8 @@
 /**
- * Load-bearing regexes and shared classification logic for every plugin's
- * comment analyzer. Exact patterns are pinned by the spec — do not "clean up."
+ * These regexes and logic here are shared
+ * load bearing for every plugin's comments
+ * The patterns are exact, pinned by the spec
+ * so leave them be and never clean them up
  */
 
 export const LINE_COMMENT      = /^\s*\/\/\s?(.*)$/;

@@ -1,7 +1,10 @@
 /**
- * writeSync, not process.stdout.write: the hook harness reads stdout over a
- * pipe (~64 KiB buffer). An async write can still be draining when
- * process.exit fires, truncating the JSON right when there's most to report.
+ * We write directly, not the buffered stream
+ * the hook harness reads output through a pipe
+ * whose buffer holds a modest chunk at once
+ * an async write might still be draining out
+ * when the exit call cuts the message short
+ * just when there is the most that we could tell
  */
 import { writeSync } from "node:fs";
 

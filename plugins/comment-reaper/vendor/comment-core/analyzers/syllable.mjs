@@ -1,7 +1,8 @@
 /**
- * Verse plugins (bard, haijin) both import this by subpath — never from
- * index.mjs, since counting syllables is a form-specific opinion, not
- * plumbing.
+ * The verse plugins, bard and haijin, import
+ * this file directly, not the plumbing gate
+ * since counting syllables reflects a choice
+ * of form and not the plumbing all tools share
  */
 import { syllable as vendoredSyllable } from "../vendor/syllable.mjs";
 import pluralize from "../vendor/pluralize/pluralize.js";
@@ -82,7 +83,7 @@ function selftest() {
   assert(countLine("the cat sat") === 3, "countLine sums tokens");
   assert(breakdown("the cat") === "the/1 cat/1", "breakdown formats word/n pairs");
 
-  /** "'" strips to non-empty but counts to zero syllables; must be dropped. */
+  /** bare apostrophe drops out as zero */
   assert(countLine("the cat ' sat") === 3, "countLine drops zero-count tokens");
   assert(
     breakdown("the cat ' sat") === "the/1 cat/1 sat/1",
