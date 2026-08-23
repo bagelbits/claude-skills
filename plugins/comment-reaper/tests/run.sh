@@ -40,6 +40,11 @@ process.exit(ok ? 0 : 1);
 diff -r "$PLUGIN_ROOT/vendor/comment-core" "$REPO_ROOT/packages/comment-core" >/dev/null 2>&1 \
   && pass "vendored comment-core matches canonical" || fail "vendored comment-core drifted"
 
+echo "== vendored comment-core selftests =="
+node "$PLUGIN_ROOT/vendor/comment-core/selftest.mjs" >/tmp/comment-reaper-selftest.$$ 2>&1 \
+  && pass "vendored comment-core selftests pass" || { fail "vendored comment-core selftest failed"; cat /tmp/comment-reaper-selftest.$$; }
+rm -f /tmp/comment-reaper-selftest.$$
+
 echo "== analyzer import =="
 node -e "import('$PLUGIN_ROOT/hooks/reaper-rules.mjs').then(()=>console.log('ok')).catch(e=>{console.error(e);process.exit(1)})" \
   && pass "reaper-rules.mjs imports cleanly" || fail "reaper-rules.mjs import failed"
@@ -49,7 +54,7 @@ TMP=$(mktemp -d)
 
 echo '{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const x = 1;\n// sets the value\n"}}' \
   | node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" > "$TMP/out1"
-grep -q "x.ts" "$TMP/out1" && pass "violating write denied naming file" || fail "violation not denied"
+grep -q "x.ts:2" "$TMP/out1" && pass "violating write denied naming file:line" || fail "violation not denied with file:line"
 
 echo '{"tool_name":"Write","tool_input":{"file_path":"y.ts","content":"const x = 1; // retry avoids a race with the webhook\n"}}' \
   | node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" > "$TMP/out2"
@@ -65,6 +70,10 @@ printf '{"tool_name":"Write","tool_input":{"file_path":"z.ts","content":"const x
   | node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" > "$TMP/out4"
 grep -q "z.ts" "$TMP/out4" && pass "CRLF payload still analyzed" || fail "CRLF payload not analyzed"
 
+# 25 short "// sets value N" lines: 25 individual "what, not why" findings
+# plus one more finding for the 25-line run itself (>= MULTILINE_RUN) = 26
+# total. Verify the exact rendered shape: preamble states the TRUE total
+# (26), body is 20 rendered rows + exactly one "... and 6 more." tally row.
 node -e '
 const lines = [];
 for (let i = 0; i < 25; i++) lines.push("// sets value " + i);
@@ -72,8 +81,34 @@ process.stdout.write(JSON.stringify({ tool_name: "Write", tool_input: { file_pat
 ' > "$TMP/big.json"
 node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" < "$TMP/big.json" > "$TMP/out5"
 node -e "JSON.parse(require('fs').readFileSync('$TMP/out5','utf8')); console.log('parsed')" > "$TMP/parsed" 2>&1
-grep -q parsed "$TMP/parsed" && pass "deny >64KiB still parses as JSON" || fail "large deny failed to parse"
-grep -q "more\." "$TMP/out5" && pass ">20 findings render overflow tally" || fail "no overflow tally"
+grep -q parsed "$TMP/parsed" && pass "deny with many findings still parses as JSON" || fail "large deny failed to parse"
+node -e '
+const fs = require("fs");
+const o = JSON.parse(fs.readFileSync("'"$TMP"'/out5", "utf8"));
+const reason = o.hookSpecificOutput.permissionDecisionReason;
+const lines = reason.split("\n");
+const ok = reason.includes("adds 26 redundant comment(s)")
+  && lines.length === 22
+  && lines[lines.length - 1] === "  … and 6 more.";
+process.exit(ok ? 0 : 1);
+' && pass ">20 findings render exact 20-row + tally overflow shape, true total in preamble" \
+  || fail "overflow rendering shape or true-total count wrong"
+
+# A genuinely large payload: one COMMENTED_CODE-matching line whose text
+# alone is >64KiB, so the deny JSON payload written to stdout must itself
+# exceed the ~64KiB pipe buffer deny.mjs's writeSync comment warns about.
+node -e '
+const big = "A".repeat(100000);
+const content = "// const x = \x27" + big + "\x27;";
+process.stdout.write(JSON.stringify({ tool_name: "Write", tool_input: { file_path: "huge.ts", content } }));
+' > "$TMP/huge.json"
+node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" < "$TMP/huge.json" > "$TMP/out6"
+BYTES=$(wc -c < "$TMP/out6" | tr -d ' ')
+[ "$BYTES" -gt 65536 ] && pass "deny payload genuinely exceeds 64KiB pipe buffer ($BYTES bytes)" \
+  || fail "deny payload only $BYTES bytes, not genuinely >64KiB"
+node -e "JSON.parse(require('fs').readFileSync('$TMP/out6','utf8')); console.log('parsed')" > "$TMP/parsed6" 2>&1
+grep -q parsed "$TMP/parsed6" && pass "genuinely >64KiB deny still parses as JSON" || fail "genuinely large deny failed to parse"
+grep -q "huge.ts" "$TMP/out6" && pass "genuinely >64KiB deny still names offending file" || fail "genuinely large deny missing filename"
 
 echo "== commit/PR gate =="
 GITTMP=$(mktemp -d)
@@ -111,10 +146,72 @@ printf 'const x = 1;\n// sets the value\n' > "$GITTMP/sub/c.ts"
 git -C "$GITTMP" add sub/c.ts
 OUT=$(cd "$GITTMP/sub" && node "$PLUGIN_ROOT/hooks/pre-pr-reaper-check.mjs")
 echo "$OUT" | grep -q "sub/c.ts" && pass "hostile diff config still denies with correct path" || fail "hostile diff config broke path resolution: $OUT"
+git -C "$GITTMP" reset --hard -q
+
+# Filename with a space: git pads the "+++ b/..." header with a trailing
+# tab when the path contains a space. headerPath() must strip that tab, not
+# fold it into the filename or corrupt it.
+git -C "$GITTMP" checkout -q -b spacey main
+printf 'const x = 1;\n// sets the value\n' > "$GITTMP/my file.ts"
+git -C "$GITTMP" add "my file.ts"
+OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-reaper-check.mjs")
+echo "$OUT" | grep -q "my file.ts:2" && pass "space-containing filename denied with tab stripped, not corrupted" \
+  || fail "space-containing filename mishandled: $OUT"
+git -C "$GITTMP" reset --hard -q
+
+# Non-ASCII filename alongside a normal one, both violating. diff.mjs's
+# DIFF_CONFIG forces `-c core.quotePath=false` on every git invocation
+# (see diff.mjs), which defeats octal-escaping of non-ASCII bytes even when
+# the repo config (set here) tries to force quoting back on -- so café.ts's
+# raw UTF-8 name should come through the header intact rather than being
+# quoted-and-dropped, and neither file's finding should bleed into the
+# other's.
+git -C "$GITTMP" checkout -q -b nonascii main
+git -C "$GITTMP" config core.quotePath true
+printf 'const y = 2;\n// gets the value\n' > "$GITTMP/café.ts"
+printf 'const z = 3;\n// stores the flag\n' > "$GITTMP/normal.ts"
+git -C "$GITTMP" add "café.ts" normal.ts
+OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-reaper-check.mjs")
+echo "$OUT" | grep -q "adds 2 redundant comment(s)" && pass "non-ASCII + normal filename: both findings counted, none dropped" \
+  || fail "non-ASCII + normal filename: wrong finding count: $OUT"
+echo "$OUT" | grep -qF 'café.ts:2 — reads as \"what\", not \"why\": \"gets the value\"' && pass "non-ASCII filename correctly attributed its own finding" \
+  || fail "non-ASCII filename finding missing or misattributed: $OUT"
+echo "$OUT" | grep -qF 'normal.ts:2 — reads as \"what\", not \"why\": \"stores the flag\"' && pass "normal filename finding not polluted by non-ASCII neighbor" \
+  || fail "normal filename finding missing or polluted: $OUT"
+git -C "$GITTMP" reset --hard -q
+git -C "$GITTMP" config --unset core.quotePath || true
 
 echo "== scan script =="
 OUT=$(node "$PLUGIN_ROOT/scripts/reaper-scan.mjs" "$GITTMP/a.ts")
 echo "$OUT" | grep -q '"target":"paths"' && pass "path mode reports target: paths" || fail "path mode target wrong"
+
+# Branch mode with no args, from inside a repo with a resolvable base and
+# nothing staged: target must be the resolved base branch name (not null,
+# not omitted), and findings must be an explicit empty array.
+SCANTMP=$(mktemp -d)
+git -C "$SCANTMP" init -q
+git -C "$SCANTMP" checkout -q -b main
+git -C "$SCANTMP" commit -q --allow-empty -m base
+OUT=$(cd "$SCANTMP" && node "$PLUGIN_ROOT/scripts/reaper-scan.mjs")
+node -e '
+const o = JSON.parse(process.argv[1]);
+process.exit(o.target === "main" && Array.isArray(o.findings) && o.findings.length === 0 ? 0 : 1);
+' "$OUT" && pass "branch mode with clean diff reports resolved base and empty findings" \
+  || fail "branch mode clean-diff shape wrong: $OUT"
+rm -rf "$SCANTMP"
+
+# Vendored/third-party path: isCodeFile() excludes anything under
+# vendor/, node_modules/, or .terraform/, so scanning it must yield zero
+# findings even though the (still-a-comment) line inside it would otherwise
+# violate the rule.
+mkdir -p "$TMP/vendor"
+printf 'const x = 1;\n// sets the value\n' > "$TMP/vendor/dummy.ts"
+OUT=$(node "$PLUGIN_ROOT/scripts/reaper-scan.mjs" "$TMP/vendor/dummy.ts")
+node -e '
+const o = JSON.parse(process.argv[1]);
+process.exit(Array.isArray(o.findings) && o.findings.length === 0 ? 0 : 1);
+' "$OUT" && pass "vendor/ path produces zero findings (third-party exclusion)" \
+  || fail "vendor/ path was analyzed for findings: $OUT"
 
 rm -rf "$TMP" "$GITTMP" "$NOTGIT"
 
