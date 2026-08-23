@@ -39,14 +39,19 @@ export function countSyllables(word) {
   return vendoredSyllable(normalize(clean));
 }
 
+function countedTokens(body) {
+  return body.split(/\s+/)
+    .map((t) => t.replace(/[^A-Za-z']/g, ""))
+    .map((t) => [t, countSyllables(t)])
+    .filter(([, n]) => n > 0);
+}
+
 export function countLine(body) {
-  return (body.split(/\s+/).map((t) => t.replace(/[^A-Za-z']/g, "")).filter(Boolean))
-    .reduce((sum, tok) => sum + countSyllables(tok), 0);
+  return countedTokens(body).reduce((sum, [, n]) => sum + n, 0);
 }
 
 export function breakdown(body) {
-  return body.split(/\s+/).map((t) => t.replace(/[^A-Za-z']/g, "")).filter(Boolean)
-    .map((tok) => `${tok}/${countSyllables(tok)}`).join(" ");
+  return countedTokens(body).map(([t, n]) => `${t}/${n}`).join(" ");
 }
 
 function assert(cond, msg) {
@@ -76,6 +81,13 @@ function selftest() {
 
   assert(countLine("the cat sat") === 3, "countLine sums tokens");
   assert(breakdown("the cat") === "the/1 cat/1", "breakdown formats word/n pairs");
+
+  /** "'" strips to non-empty but counts to zero syllables; must be dropped. */
+  assert(countLine("the cat ' sat") === 3, "countLine drops zero-count tokens");
+  assert(
+    breakdown("the cat ' sat") === "the/1 cat/1 sat/1",
+    "breakdown drops zero-count tokens",
+  );
 
   console.log("analyzers/syllable.mjs selftest OK");
 }
