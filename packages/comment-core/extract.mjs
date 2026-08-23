@@ -37,7 +37,6 @@ export const makeExempt = (...prefixes) =>
   new RegExp(`^(${[...prefixes, SHARED_MARKERS].join("|")})`, "i");
 
 const LETTER_WORD = /[A-Za-z][A-Za-z']*/g;
-const DEFAULT_EXEMPT = new RegExp(`^(${SHARED_MARKERS})`, "i");
 
 export function readLine(line, { allowHash = false, exempt } = {}) {
   const raw = line.replace(/\r$/, "");
@@ -63,7 +62,6 @@ export function readLine(line, { allowHash = false, exempt } = {}) {
 
   if (body === null || body === "" || body === "/") return { kind: "none" };
   if (exempt && exempt.test(body)) return { kind: "exempt" };
-  if (DEFAULT_EXEMPT.test(body)) return { kind: "none" };
 
   const words = body.match(LETTER_WORD) ?? [];
   if (words.length === 0) return { kind: "none" };
@@ -139,7 +137,7 @@ function selftest() {
   assert(readLine("// 'tis a test").words[0] === "tis", "leading apostrophe stripped");
   assert(readLine("// don't stop").words[0] === "don't", "internal apostrophe kept");
   assert(readLine("//").kind === "none", "empty line comment is none");
-  assert(readLine("// TODO: fix").kind === "none", "no exempt passed still finds letter words but body ok");
+  assert(readLine("// TODO: fix").kind === "skipped", "allcaps TODO trips UNSPEAKABLE when no exempt passed");
   assert(readLine("code();").kind === "none", "non-comment line is none");
   assert(readLine("// camelCase here").kind === "skipped", "camelCase is unspeakable");
   assert(readLine("// has a number 4").kind === "skipped", "digit is unspeakable");
