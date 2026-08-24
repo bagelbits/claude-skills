@@ -94,7 +94,7 @@ export function diffFindings(diff, read) {
 }
 
 function format(f) {
-  const partner = f.kind === "rhyme" ? ` (partner ${f.file}:${f.partnerLine})` : "";
+  const partner = f.kind === "rhyme" ? ` (partner ${f.file}${f.partnerLine ? ":" + f.partnerLine : ""})` : "";
   return `  [${f.kind}] ${f.file}${f.line ? ":" + f.line : ""} — ${f.reason}: "${f.text}"${partner}`;
 }
 
