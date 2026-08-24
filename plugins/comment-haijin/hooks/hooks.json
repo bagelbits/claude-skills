@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/haijin-filter.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\haijin-filter.mjs\" }",
+            "statusMessage": "comment-haijin: checking new comments for 5-7-5 haiku form…",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__plugin_github_github__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'HAIJIN RULE: prose comments live in /** ... */ blocks whose lines count 5-7-5 (haiku); a // line comment is denied on form and cannot carry a haiku. Longer notes chain whole haiku — a block'\"'\"'s prose line count must be a multiple of three (3, 6, 9…), and if one line in a block is verse every line in that block must be. Shared markers and haijin:/bard:-prefixed lines are exempt. A PreToolUse hook blocks writes and commits that add violations.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

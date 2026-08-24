@@ -1,0 +1,38 @@
+name: release-plugins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/*/.claude-plugin/plugin.json"
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run full test suite before tagging
+        run: bash scripts/run-plugin-tests.sh
+      - name: Tag each plugin at its manifest version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for f in plugins/*/.claude-plugin/plugin.json; do
+            name=$(node -e "console.log(require('./' + process.argv[1]).name)" "$f")
+            version=$(node -e "console.log(require('./' + process.argv[1]).version)" "$f")
+            tag="${name}-v${version}"
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "tag $tag already exists, skipping"
+            else
+              git tag "$tag"
+              git push origin "$tag"
+            fi
+          done

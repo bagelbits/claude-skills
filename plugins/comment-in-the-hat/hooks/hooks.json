@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/hat-filter.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\hat-filter.mjs\" }",
+            "statusMessage": "comment-in-the-hat: checking new comments for AABB couplet form…",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__plugin_github_github__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'CAT-IN-THE-HAT RULE: consecutive prose comment lines must pair into rhyming AABB couplets, each line scanning as anapestic meter (7-12 syllables). A cat-in-the-hat: prefixed line at the top of a comment is the only escape hatch for unspeakable tokens. Shared markers are also exempt. A PreToolUse hook blocks writes and commits that add violations — see the green-eggs-and-hamify skill to rewrite.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
