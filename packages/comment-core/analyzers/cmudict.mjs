@@ -68,11 +68,11 @@ export function parseCmudict(text) {
 
   for (const line of text.split("\n")) {
     if (!line || line.startsWith(";;;")) continue;
-    const spaceIdx = line.indexOf("  ");
-    if (spaceIdx === -1) continue;
+    const split = /^(\S+)\s+(.+)$/.exec(line);
+    if (!split) continue;
 
-    const rawWord = line.slice(0, spaceIdx);
-    const phonemes = line.slice(spaceIdx).trim().split(/\s+/);
+    const rawWord = split[1];
+    const phonemes = split[2].trim().split(/\s+/);
     const variantMatch = VARIANT.exec(rawWord);
     const headword = normalizeWord(variantMatch ? variantMatch[1] : rawWord);
     if (!headword) continue;
