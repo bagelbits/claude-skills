@@ -114,6 +114,26 @@ node -e "JSON.parse(require('fs').readFileSync('$TMP/out6','utf8')); console.log
 grep -q parsed "$TMP/parsed6" && pass "genuinely >64KiB deny still parses as JSON" || fail "genuinely large deny failed to parse"
 grep -q "huge.ts" "$TMP/out6" && pass "genuinely >64KiB deny still names offending file" || fail "genuinely large deny missing filename"
 
+# Regression for Finding 1: an Edit payload carries no lineMap, but the
+# grouped mixed-block analysis (blockRuns) must still run against it. One
+# scanning 10-syllable line plus one line with an unspeakable token, in the
+# same /** ... */ block -- the per-line meter check alone never touches the
+# unspeakable line; only the grouped mixed-block check catches it.
+node -e '
+process.stdout.write(JSON.stringify({
+  tool_name: "Edit",
+  tool_input: {
+    file_path: "edited.ts",
+    old_string: "const z = 1;",
+    new_string: "const z = 1;\n/**\n * the counting tool agrees this line is fine\n * fileName.ts holds the answer we need here\n */",
+  },
+}));
+' | node "$PLUGIN_ROOT/hooks/bard-filter.mjs" > "$TMP/out-edit"
+grep -q "edited.ts" "$TMP/out-edit" && pass "Edit payload: grouped mixed-block rule denies an unspeakable line in a scanning block" \
+  || fail "Edit payload: grouped mixed-block rule did not fire"
+grep -q "not meterable, yet a line in the same block scans" "$TMP/out-edit" && pass "Edit payload: mixed-block finding produced (grouped rule ran)" \
+  || fail "Edit payload: mixed-block finding missing"
+
 echo "== mixed-block rule =="
 # One scanning prose line plus one line with an unspeakable token in the
 # same /** ... */ block: a block reads as all verse or all plain, so the

@@ -134,6 +134,25 @@ node -e "JSON.parse(require('fs').readFileSync('$TMP/out6','utf8')); console.log
 grep -q parsed "$TMP/parsed6" && pass "genuinely >64KiB deny still parses as JSON" || fail "genuinely large deny failed to parse"
 grep -q "huge.ts" "$TMP/out6" && pass "genuinely >64KiB deny still names offending file" || fail "genuinely large deny missing filename"
 
+# Regression for Finding 1: an Edit payload carries no lineMap, but the
+# grouped couplet-pairing analysis (commentUnits) must still run against
+# it. A single anapestic prose line with no rhyming partner scans meter
+# cleanly on its own -- only the grouped "unpaired" check catches it.
+node -e '
+process.stdout.write(JSON.stringify({
+  tool_name: "Edit",
+  tool_input: {
+    file_path: "edited.ts",
+    old_string: "const z = 1;",
+    new_string: "const z = 1;\n// The cat in the hat likes to sit on a mat",
+  },
+}));
+' | node "$PLUGIN_ROOT/hooks/hat-filter.mjs" > "$TMP/out-edit"
+grep -q "edited.ts" "$TMP/out-edit" && pass "Edit payload: grouped couplet-pairing rule denies an unpaired line" \
+  || fail "Edit payload: grouped couplet-pairing rule did not fire"
+grep -q "has no rhyming partner" "$TMP/out-edit" && pass "Edit payload: unpaired finding produced (grouped rule ran)" \
+  || fail "Edit payload: unpaired finding missing"
+
 echo "== cat-in-the-hat: hatch =="
 # A cat-in-the-hat: line sitting at the TOP of the comment, above an
 # otherwise-conforming couplet, hoists the unspeakable camelCase token out

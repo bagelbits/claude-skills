@@ -42,14 +42,12 @@ export function analyzeLines(file, lines, lineMap) {
     }
   });
 
-  if (lineMap) {
-    for (const run of blockRuns(lines, lineMap)) {
-      const hasScanning = run.some((i) => readings[i].kind === "prose" && readings[i].syllables === METER);
-      if (!hasScanning) continue;
-      for (const i of run) {
-        if (readings[i].kind === "skipped") {
-          findings.push({ file, line: lineMap[i], text: lines[i].trim(), reason: MIXED_REASON });
-        }
+  for (const run of blockRuns(lines, lineMap)) {
+    const hasScanning = run.some((i) => readings[i].kind === "prose" && readings[i].syllables === METER);
+    if (!hasScanning) continue;
+    for (const i of run) {
+      if (readings[i].kind === "skipped") {
+        findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: lines[i].trim(), reason: MIXED_REASON });
       }
     }
   }

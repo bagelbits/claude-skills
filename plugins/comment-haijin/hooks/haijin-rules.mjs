@@ -50,32 +50,30 @@ export function analyzeLines(file, lines, lineMap) {
     }
   });
 
-  if (lineMap) {
-    for (const block of blockUnits(lines, lineMap)) {
-      const proseIdx = block.filter((i) => readings[i].kind === "prose" && readings[i].form === "block");
-      if (proseIdx.length === 0) continue;
+  for (const block of blockUnits(lines, lineMap)) {
+    const proseIdx = block.filter((i) => readings[i].kind === "prose" && readings[i].form === "block");
+    if (proseIdx.length === 0) continue;
 
-      for (const i of block) {
-        if (readings[i].kind === "skipped") {
-          findings.push({ file, line: lineMap[i], text: lines[i].trim(), reason: MIXED_REASON });
-        }
+    for (const i of block) {
+      if (readings[i].kind === "skipped") {
+        findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: lines[i].trim(), reason: MIXED_REASON });
       }
-
-      const whole = proseIdx.length - (proseIdx.length % 3);
-      proseIdx.forEach((i, pos) => {
-        if (pos >= whole) {
-          findings.push({ file, line: lineMap[i], text: readings[i].body, reason: shapeReason(proseIdx.length) });
-          return;
-        }
-        const want = HAIKU[pos % 3];
-        if (readings[i].syllables !== want) {
-          findings.push({
-            file, line: lineMap[i], text: readings[i].body,
-            reason: `${readings[i].syllables} syllable(s) on line ${(pos % 3) + 1} of the haiku, needs ${want} (${breakdown(readings[i].body)})`,
-          });
-        }
-      });
     }
+
+    const whole = proseIdx.length - (proseIdx.length % 3);
+    proseIdx.forEach((i, pos) => {
+      if (pos >= whole) {
+        findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: readings[i].body, reason: shapeReason(proseIdx.length) });
+        return;
+      }
+      const want = HAIKU[pos % 3];
+      if (readings[i].syllables !== want) {
+        findings.push({
+          file, line: lineMap ? lineMap[i] : undefined, text: readings[i].body,
+          reason: `${readings[i].syllables} syllable(s) on line ${(pos % 3) + 1} of the haiku, needs ${want} (${breakdown(readings[i].body)})`,
+        });
+      }
+    });
   }
 
   findings.sort((a, b) => (a.line ?? 0) - (b.line ?? 0));

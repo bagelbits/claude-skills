@@ -40,47 +40,45 @@ export function analyzeLines(file, lines, lineMap) {
     }
   });
 
-  if (lineMap) {
-    for (const unit of commentUnits(readings, lineMap)) {
-      const proseIdx = unit.filter((i) => readings[i].kind === "prose");
-      const firstProse = proseIdx[0];
+  for (const unit of commentUnits(readings, lineMap)) {
+    const proseIdx = unit.filter((i) => readings[i].kind === "prose");
+    const firstProse = proseIdx[0];
 
-      for (const i of unit) {
-        const raw = lines[i].replace(/\r$/, "");
-        if (readings[i].kind === "exempt" && /cat-in-the-hat:/i.test(raw) && firstProse !== undefined && i > firstProse) {
-          findings.push({
-            file, line: lineMap[i], text: raw.trim(), kind: "hoist",
-            reason: "a `cat-in-the-hat:` line must sit at the top of its comment, above every couplet line",
-          });
-        }
-        if (readings[i].kind === "skipped" && proseIdx.length > 0) {
-          findings.push({
-            file, line: lineMap[i], text: lines[i].trim(), kind: "block",
-            reason: "not speakable, yet a line in the same comment is verse — hoist the token onto a `cat-in-the-hat:` line, or rephrase",
-          });
-        }
-      }
-
-      for (let p = 0; p < proseIdx.length - 1; p += 2) {
-        const aIdx = proseIdx[p];
-        const bIdx = proseIdx[p + 1];
-        const a = readings[aIdx];
-        const b = readings[bIdx];
-        if (!oracle.rhymes(lastWord(a.words), lastWord(b.words))) {
-          findings.push({
-            file, line: lineMap[bIdx], text: b.body, kind: "rhyme",
-            partnerLine: lineMap[aIdx], partnerText: a.body,
-            reason: `does not rhyme with "${a.body}" — a couplet's two lines must rhyme`,
-          });
-        }
-      }
-      if (proseIdx.length % 2 === 1) {
-        const last = proseIdx[proseIdx.length - 1];
+    for (const i of unit) {
+      const raw = lines[i].replace(/\r$/, "");
+      if (readings[i].kind === "exempt" && /cat-in-the-hat:/i.test(raw) && firstProse !== undefined && i > firstProse) {
         findings.push({
-          file, line: lineMap[last], text: readings[last].body, kind: "unpaired",
-          reason: "has no rhyming partner — a couplet needs two lines; add a rhyming line",
+          file, line: lineMap ? lineMap[i] : undefined, text: raw.trim(), kind: "hoist",
+          reason: "a `cat-in-the-hat:` line must sit at the top of its comment, above every couplet line",
         });
       }
+      if (readings[i].kind === "skipped" && proseIdx.length > 0) {
+        findings.push({
+          file, line: lineMap ? lineMap[i] : undefined, text: lines[i].trim(), kind: "block",
+          reason: "not speakable, yet a line in the same comment is verse — hoist the token onto a `cat-in-the-hat:` line, or rephrase",
+        });
+      }
+    }
+
+    for (let p = 0; p < proseIdx.length - 1; p += 2) {
+      const aIdx = proseIdx[p];
+      const bIdx = proseIdx[p + 1];
+      const a = readings[aIdx];
+      const b = readings[bIdx];
+      if (!oracle.rhymes(lastWord(a.words), lastWord(b.words))) {
+        findings.push({
+          file, line: lineMap ? lineMap[bIdx] : undefined, text: b.body, kind: "rhyme",
+          partnerLine: lineMap ? lineMap[aIdx] : undefined, partnerText: a.body,
+          reason: `does not rhyme with "${a.body}" — a couplet's two lines must rhyme`,
+        });
+      }
+    }
+    if (proseIdx.length % 2 === 1) {
+      const last = proseIdx[proseIdx.length - 1];
+      findings.push({
+        file, line: lineMap ? lineMap[last] : undefined, text: readings[last].body, kind: "unpaired",
+        reason: "has no rhyming partner — a couplet needs two lines; add a rhyming line",
+      });
     }
   }
 

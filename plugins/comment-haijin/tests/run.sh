@@ -117,6 +117,28 @@ node -e "JSON.parse(require('fs').readFileSync('$TMP/out6','utf8')); console.log
 grep -q parsed "$TMP/parsed6" && pass "genuinely >64KiB deny still parses as JSON" || fail "genuinely large deny failed to parse"
 grep -q "huge.ts" "$TMP/out6" && pass "genuinely >64KiB deny still names offending file" || fail "genuinely large deny missing filename"
 
+# Regression for Finding 1: an Edit payload carries no lineMap (only Write
+# provides one), but the grouped shape/syllable analysis (blockUnits) must
+# still run against it. A complete 3-line block (a multiple of three, so no
+# ragged-tail finding fires) with a genuine syllable mismatch on line 2 --
+# "the wind moves across" is 5 syllables, needs 7 -- can only be caught by
+# that grouped path; the per-line // form check never touches a /** */
+# block at all.
+node -e '
+process.stdout.write(JSON.stringify({
+  tool_name: "Edit",
+  tool_input: {
+    file_path: "edited.ts",
+    old_string: "const z = 1;",
+    new_string: "const z = 1;\n/**\n * an old silent pond\n * the wind moves across\n * leaves drift on the pond\n */",
+  },
+}));
+' | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out-edit"
+grep -q "edited.ts" "$TMP/out-edit" && pass "Edit payload: grouped shape/syllable rule denies a bad haiku block" \
+  || fail "Edit payload: grouped shape/syllable rule did not fire"
+grep -q "needs 7" "$TMP/out-edit" && pass "Edit payload: syllable-mismatch finding produced (grouped rule ran)" \
+  || fail "Edit payload: syllable-mismatch finding missing"
+
 echo "== ragged-tail shape rule =="
 # A block with 5 prose lines: the first three form a complete, correctly
 # scanning haiku (5-7-5: "an old silent pond" / "the wind moves across the

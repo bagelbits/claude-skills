@@ -110,6 +110,16 @@ node -e "JSON.parse(require('fs').readFileSync('$TMP/out6','utf8')); console.log
 grep -q parsed "$TMP/parsed6" && pass "genuinely >64KiB deny still parses as JSON" || fail "genuinely large deny failed to parse"
 grep -q "huge.ts" "$TMP/out6" && pass "genuinely >64KiB deny still names offending file" || fail "genuinely large deny missing filename"
 
+# Edit-payload coverage (see comment-bard, -haijin, -in-the-hat siblings,
+# where the equivalent case is a regression test for Finding 1). reaper's
+# analyzeLines() already only ever gated the `line:` field on lineMap, never
+# its rule logic, so this closes the same untested-payload-shape gap
+# without exercising a bug.
+echo '{"tool_name":"Edit","tool_input":{"file_path":"edited.ts","old_string":"const z = 1;","new_string":"const z = 1;\n// sets the value"}}' \
+  | node "$PLUGIN_ROOT/hooks/reaper-filter.mjs" > "$TMP/out-edit"
+grep -q "edited.ts" "$TMP/out-edit" && pass "Edit payload: what-not-why rule denies a redundant comment" \
+  || fail "Edit payload: what-not-why rule did not fire"
+
 echo "== commit/PR gate =="
 GITTMP=$(mktemp -d)
 git -C "$GITTMP" init -q
