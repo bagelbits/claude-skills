@@ -218,6 +218,25 @@ echo "$OUT" | grep -q '"line":2' && echo "$OUT" | grep -q "does not rhyme" \
   || { echo "  FAIL: non-rhyming couplet not flagged as expected: $OUT"; FAIL=1; }
 rm -rf "$TMP2"
 
+echo "== Edit payload: rhyme finding partner has no lineMap =="
+# Regression test for the partnerLine guard in format() -- an Edit payload
+# carries no lineMap, so a rhyme finding's partnerLine is undefined; the
+# rendered "(partner ...)" segment must omit the line number cleanly rather
+# than rendering the literal string "undefined".
+node -e '
+process.stdout.write(JSON.stringify({
+  tool_name: "Edit",
+  tool_input: {
+    file_path: "edited.ts",
+    old_string: "const x = 1;",
+    new_string: "const x = 1;\n// The cat in the hat likes to sit on a mat\n// A dog in a hat likes to run down the street",
+  },
+}));
+' | node "$PLUGIN_ROOT/hooks/hat-filter.mjs" > "$TMP/out_partner"
+grep -q "does not rhyme" "$TMP/out_partner" && ! grep -q "undefined" "$TMP/out_partner" \
+  && pass "Edit-path rhyme finding's partner segment has no line number, not 'undefined'" \
+  || { echo "  FAIL: partnerLine rendering broken: $(cat "$TMP/out_partner")"; FAIL=1; }
+
 echo "== commit/PR gate =="
 GITTMP=$(mktemp -d)
 git -C "$GITTMP" init -q
