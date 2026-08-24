@@ -21,6 +21,14 @@ URL are never flagged.
 `reap` — cleans up existing comments beyond what the write/commit gates catch.
 Invoke it to audit a branch or a set of files.
 
+## Compatibility
+
+This plugin wants redundant comments removed, so it's incompatible with
+`comment-bard`, `comment-haijin`, and `comment-in-the-hat`, which all want
+comments versified into a fixed form — a "why, not what" content rule is
+orthogonal to, and sometimes at odds with, enforcing meter or rhyme on the
+same lines.
+
 ## Development
 
 `vendor/comment-core` is a synced copy of `packages/comment-core` — edit the
