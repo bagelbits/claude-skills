@@ -1,0 +1,35 @@
+{
+  "name": "claude-skills",
+  "description": "Comment-quality enforcement plugins for Claude Code: reap narration/dead-code comments, or require haiku, iambic pentameter, or rhyming couplets.",
+  "owner": { "name": "bagelbits", "url": "https://github.com/bagelbits" },
+  "plugins": [
+    {
+      "name": "comment-reaper",
+      "source": "./plugins/comment-reaper",
+      "description": "Blocks new comments that narrate code or hide commented-out dead code; keeps the non-obvious-why house rule.",
+      "category": "code-quality",
+      "keywords": ["comments", "code-quality", "hooks", "pre-commit"]
+    },
+    {
+      "name": "comment-bard",
+      "source": "./plugins/comment-bard",
+      "description": "Blocks new prose comments that don't scan as iambic pentameter — every comment line must be exactly ten syllables.",
+      "category": "code-quality",
+      "keywords": ["comments", "code-quality", "hooks", "pre-commit", "poetry"]
+    },
+    {
+      "name": "comment-haijin",
+      "source": "./plugins/comment-haijin",
+      "description": "Blocks new prose comments that don't fit 5-7-5 haiku form inside /** ... */ blocks.",
+      "category": "code-quality",
+      "keywords": ["comments", "code-quality", "hooks", "pre-commit", "haiku"]
+    },
+    {
+      "name": "comment-in-the-hat",
+      "source": "./plugins/comment-in-the-hat",
+      "description": "Blocks new prose comments that don't pair into rhyming anapestic couplets (AABB).",
+      "category": "code-quality",
+      "keywords": ["comments", "code-quality", "hooks", "pre-commit", "rhyme"]
+    }
+  ]
+}
