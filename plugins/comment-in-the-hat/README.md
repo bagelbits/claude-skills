@@ -57,6 +57,11 @@ oracle the gate uses (`oracle.scanMeter`, `oracle.rhymes`) rather than
 trusting scansion by ear, and reports exactly what changed. Invoke it to fix
 reported violations or to hamify a file ahead of time.
 
+`green-eggs-and-hamify-text` — composes original AABB couplets from any
+given text (a PR summary, a review note, a suggestion) rather than repairing
+an existing comment. Verified through the same oracle. Invoke it to leave a
+Seuss-style poem as a PR comment.
+
 ## Compatibility
 
 This plugin imposes its own fixed verse form on comments, so it conflicts
