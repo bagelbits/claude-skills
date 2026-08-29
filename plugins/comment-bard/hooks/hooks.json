@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/bard-filter.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\bard-filter.mjs\" }",
+            "command": "[ -n \"$COMMENT_BARD_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/bard-filter.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_BARD_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\bard-filter.mjs\" }",
             "statusMessage": "comment-bard: scanning new comments for iambic pentameter…",
             "timeout": 10
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_BARD_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_BARD_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
             "statusMessage": "comment-bard: scanning branch diff for iambic pentameter…",
             "timeout": 20
           }
@@ -32,8 +32,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_BARD_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_BARD_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
             "statusMessage": "comment-bard: scanning branch diff for iambic pentameter…",
             "timeout": 20
           }
@@ -44,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_BARD_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-bard-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_BARD_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-bard-check.mjs\" }",
             "statusMessage": "comment-bard: scanning branch diff for iambic pentameter…",
             "timeout": 20
           }

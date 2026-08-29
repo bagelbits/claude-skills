@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/hat-filter.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\hat-filter.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAT_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/hat-filter.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAT_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\hat-filter.mjs\" }",
             "statusMessage": "comment-in-the-hat: checking new comments for AABB couplet form…",
             "timeout": 10
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAT_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAT_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
             "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
             "timeout": 20
           }
@@ -32,8 +32,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAT_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAT_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
             "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
             "timeout": 20
           }
@@ -44,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAT_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAT_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
             "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
             "timeout": 20
           }

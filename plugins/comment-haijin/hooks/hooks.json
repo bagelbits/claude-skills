@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/haijin-filter.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\haijin-filter.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAIKU_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/haijin-filter.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAIKU_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\haijin-filter.mjs\" }",
             "statusMessage": "comment-haijin: checking new comments for 5-7-5 haiku form…",
             "timeout": 10
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAIKU_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAIKU_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
             "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
             "timeout": 20
           }
@@ -32,8 +32,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAIKU_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAIKU_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
             "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
             "timeout": 20
           }
@@ -44,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
+            "command": "[ -n \"$COMMENT_HAIKU_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-haijin-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_HAIKU_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-haijin-check.mjs\" }",
             "statusMessage": "comment-haijin: checking branch diff for 5-7-5 haiku form…",
             "timeout": 20
           }
