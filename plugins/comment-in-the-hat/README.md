@@ -47,7 +47,7 @@ distinction they wouldn't notice. This is a deliberate choice, not a bug —
 see `vendor/VENDOR.md` for the full rationale and the alternative that was
 considered and not taken.
 
-## Skill
+## Skills
 
 `green-eggs-and-hamify` — rewrites existing comments into rhyming anapestic
 AABB couplets: converting stray line comments into paired couplets,
@@ -61,6 +61,14 @@ reported violations or to hamify a file ahead of time.
 given text (a PR summary, a review note, a suggestion) rather than repairing
 an existing comment. Verified through the same oracle. Invoke it to leave a
 Seuss-style poem as a PR comment.
+
+`green-eggs-and-hamify-pr-comment` — formats a PR review (a top-level verdict
+plus per-finding inline comments) as Dr. Seuss doggerel without losing any
+technical substance: each finding pairs a 4-line AABB rhyme with a plain-text
+explanation and concrete fix, then posts the whole thing as one review via
+`gh api .../pulls/:number/reviews`. Unlike the gate above, this skill doesn't
+touch code comments — it's for hamifying the review *of* a PR, and always
+previews the full output before posting.
 
 ## Turning Off The Gate
 
