@@ -1,0 +1,9 @@
+{
+  "name": "comment-limerick",
+  "description": "Blocks new prose comments that don't fit AABBA limerick form — five lines, real rhyme, anapestic meter.",
+  "version": "0.1.0",
+  "author": { "name": "bagelbits", "email": "cdurianward@gmail.com" },
+  "repository": "https://github.com/bagelbits/claude-skills",
+  "license": "MIT",
+  "keywords": ["comments", "code-quality", "hooks", "pre-commit", "poetry", "rhyme", "limerick"]
+}
