@@ -273,5 +273,48 @@ OUT=$(node "$PLUGIN_ROOT/scripts/haijin-scan.mjs" "$PLUGIN_ROOT"/hooks/*.mjs "$P
 FINDINGS_COUNT=$(echo "$OUT" | node -e "console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).findings.length)")
 [ "$FINDINGS_COUNT" = "0" ] && pass "haijin's own hooks/*.mjs and scripts/*.mjs pass its own gate" || fail "haijin's own source has $FINDINGS_COUNT violation(s): $OUT"
 
+echo "== gate toggle: COMMENT_HAIKU_OFF =="
+# Exercises the real wired command strings from hooks.json (not the .mjs
+# scripts directly), so this proves the env-var short-circuit actually
+# lives on the path Claude Code invokes.
+WRITE_CMD=$(node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const entry = hooks.hooks.PreToolUse.find(e => e.matcher === "Write|Edit|MultiEdit|NotebookEdit");
+process.stdout.write(entry.hooks[0].command);
+' "$PLUGIN_ROOT/hooks/hooks.json")
+COMMIT_CMD=$(node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const entry = hooks.hooks.PreToolUse.find(e => e.matcher === "Bash" && e.if === "Bash(git commit*)");
+process.stdout.write(entry.hooks[0].command);
+' "$PLUGIN_ROOT/hooks/hooks.json")
+
+TOGGLE_TMP=$(mktemp -d)
+PAYLOAD='{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const x = 1;\n// a lone line comment\n"}}'
+
+echo "$PAYLOAD" | CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" COMMENT_HAIKU_OFF=1 bash -c "$WRITE_CMD" > "$TOGGLE_TMP/on"
+[ ! -s "$TOGGLE_TMP/on" ] && pass "COMMENT_HAIKU_OFF=1 bypasses write gate (no output)" \
+  || fail "COMMENT_HAIKU_OFF=1 did not bypass write gate: $(cat "$TOGGLE_TMP/on")"
+
+echo "$PAYLOAD" | CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash -c "$WRITE_CMD" > "$TOGGLE_TMP/off"
+grep -q "x.ts" "$TOGGLE_TMP/off" && pass "write gate still denies with COMMENT_HAIKU_OFF unset" \
+  || fail "write gate did not deny with COMMENT_HAIKU_OFF unset"
+
+GATE_GITTMP=$(mktemp -d)
+git -C "$GATE_GITTMP" init -q
+git -C "$GATE_GITTMP" checkout -q -b main
+git -C "$GATE_GITTMP" commit -q --allow-empty -m base
+printf 'const x = 1;\n// a lone line comment\n' > "$GATE_GITTMP/a.ts"
+git -C "$GATE_GITTMP" add a.ts
+
+OUT=$(cd "$GATE_GITTMP" && CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" COMMENT_HAIKU_OFF=1 bash -c "$COMMIT_CMD")
+[ -z "$OUT" ] && pass "COMMENT_HAIKU_OFF=1 bypasses commit gate (no output)" \
+  || fail "COMMENT_HAIKU_OFF=1 did not bypass commit gate: $OUT"
+
+OUT=$(cd "$GATE_GITTMP" && CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash -c "$COMMIT_CMD")
+echo "$OUT" | grep -q "a.ts" && pass "commit gate still denies with COMMENT_HAIKU_OFF unset" \
+  || fail "commit gate did not deny with COMMENT_HAIKU_OFF unset"
+
+rm -rf "$TOGGLE_TMP" "$GATE_GITTMP"
+
 if [ "$FAIL" -ne 0 ]; then echo "comment-haijin: FAILED"; exit 1; fi
 echo "comment-haijin: all tests passed"

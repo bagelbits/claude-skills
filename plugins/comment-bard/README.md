@@ -38,6 +38,18 @@ Two kinds of line are never checked for meter:
 rewrite through the real syllable counter rather than a hand count. Invoke
 it to fix reported violations or to versify a file ahead of time.
 
+## Turning Off The Gate
+
+Set `COMMENT_BARD_OFF=1` to silence the write and commit/PR gates without
+disabling the plugin — the `verse` skill stays available.
+
+- **Session only:** `export COMMENT_BARD_OFF=1` before launching Claude Code.
+- **Persistent:** add it to `.claude/settings.json`, then delete the line to
+  re-arm the gate:
+  ```json
+  { "env": { "COMMENT_BARD_OFF": "1" } }
+  ```
+
 ## Compatibility
 
 This plugin comments in strict iambic pentameter, so it conflicts with any

@@ -63,6 +63,18 @@ counter (`vendor/comment-core/analyzers/syllable.mjs`) rather than trusting
 a hand count, and reports exactly what changed. Invoke it to fix reported
 violations or to haiku-ify a file ahead of time.
 
+## Turning Off The Gate
+
+Set `COMMENT_HAIKU_OFF=1` to silence the write and commit/PR gates without
+disabling the plugin — the `haiku` skill stays available.
+
+- **Session only:** `export COMMENT_HAIKU_OFF=1` before launching Claude Code.
+- **Persistent:** add it to `.claude/settings.json`, then delete the line to
+  re-arm the gate:
+  ```json
+  { "env": { "COMMENT_HAIKU_OFF": "1" } }
+  ```
+
 ## Compatibility
 
 This plugin comments in strict haiku form, so it conflicts with any other

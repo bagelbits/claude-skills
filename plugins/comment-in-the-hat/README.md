@@ -62,6 +62,18 @@ given text (a PR summary, a review note, a suggestion) rather than repairing
 an existing comment. Verified through the same oracle. Invoke it to leave a
 Seuss-style poem as a PR comment.
 
+## Turning Off The Gate
+
+Set `COMMENT_HAT_OFF=1` to silence the write and commit/PR gates without
+disabling the plugin — the `green-eggs-and-hamify` skill stays available.
+
+- **Session only:** `export COMMENT_HAT_OFF=1` before launching Claude Code.
+- **Persistent:** add it to `.claude/settings.json`, then delete the line to
+  re-arm the gate:
+  ```json
+  { "env": { "COMMENT_HAT_OFF": "1" } }
+  ```
+
 ## Compatibility
 
 This plugin imposes its own fixed verse form on comments, so it conflicts
