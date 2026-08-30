@@ -44,7 +44,7 @@ function lastWord(words) {
 
 function shapeReason(n) {
   const need = 5 - (n % 5);
-  let msg = `${n} prose line(s) in this block; a limerick is five lines of AABBA, and a sequence a multiple of five — add ${need} more line(s)`;
+  let msg = `${n} prose line(s) in this block; a limerick is five lines of AABBA, and a sequence must be a multiple of five — add ${need} more line(s)`;
   if (n > 5) msg += `, or fold ${need === 1 ? "this line" : "these lines"} into the limerick above`;
   return msg;
 }
@@ -68,8 +68,8 @@ export function analyzeLines(file, lines, lineMap) {
   const findings = [];
 
   readings.forEach((r, i) => {
-    if (r.kind === "prose" && r.form === "line") {
-      findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: r.body, kind: "form", reason: LINE_FORM_REASON });
+    if ((r.kind === "prose" || r.kind === "skipped") && r.form === "line") {
+      findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: r.body ?? lines[i].trim(), kind: "form", reason: LINE_FORM_REASON });
     }
   });
 
