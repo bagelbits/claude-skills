@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$COMMENT_LIMERICK_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/limerick-filter.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_LIMERICK_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\limerick-filter.mjs\" }",
+            "statusMessage": "comment-limerick: checking new comments for AABBA limerick form…",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$COMMENT_LIMERICK_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-limerick-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_LIMERICK_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-limerick-check.mjs\" }",
+            "statusMessage": "comment-limerick: checking branch diff for AABBA limerick form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$COMMENT_LIMERICK_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-limerick-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_LIMERICK_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-limerick-check.mjs\" }",
+            "statusMessage": "comment-limerick: checking branch diff for AABBA limerick form…",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__plugin_github_github__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$COMMENT_LIMERICK_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-limerick-check.mjs\" || exit 0",
+            "commandWindows": "if ($env:COMMENT_LIMERICK_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-limerick-check.mjs\" }",
+            "statusMessage": "comment-limerick: checking branch diff for AABBA limerick form…",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'NANTUCKET RULE: prose comments live in /** ... */ blocks whose five lines follow AABBA limerick form -- lines 1, 2, 5 rhyme and scan anapestic (7-10 syllables); lines 3, 4 rhyme and scan anapestic (5-7 syllables). A // line comment cannot carry a limerick. Longer notes chain whole limericks (a multiple of five prose lines). Shared markers are exempt, as is any nantucket: prefixed line for tokens that can never be metered. No humor requirement -- form only. A PreToolUse hook blocks writes and commits that add violations -- see the nantucket skill to rewrite.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -86,10 +86,10 @@ disabling the plugin — the `green-eggs-and-hamify` skill stays available.
 
 This plugin imposes its own fixed verse form on comments, so it conflicts
 with any other plugin that imposes a different one on the same lines:
-install at most one of `comment-in-the-hat`, `comment-bard`, or
-`comment-haijin` at a time. It's also incompatible with `comment-reaper`,
-which enforces a "why, not what" content rule orthogonal to — and sometimes
-at odds with — a fixed verse form.
+install at most one of `comment-in-the-hat`, `comment-bard`, `comment-haijin`,
+or `comment-limerick` at a time. It's also incompatible with
+`comment-reaper`, which enforces a "why, not what" content rule orthogonal
+to — and sometimes at odds with — a fixed verse form.
 
 ## Development
 

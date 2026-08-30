@@ -100,8 +100,8 @@ function strongAt(len, p) {
   return p % 3 === (len - 1) % 3;
 }
 
-function scanConstraint(C) {
-  if (C.length < 7 || C.length > 12) return false;
+function scanConstraint(C, min, max) {
+  if (C.length < min || C.length > max) return false;
   for (let p = 0; p < C.length; p++) {
     const req = strongAt(C.length, p) ? "S" : "w";
     if (C[p] !== "?" && C[p] !== req) return false;
@@ -176,7 +176,7 @@ export function createCmudict(mapPath) {
     return words[words.length - 1];
   }
 
-  function scanMeter(words) {
+  function scanMeter(words, { min = 7, max = 12 } = {}) {
     const perWord = [];
     for (const w of words) {
       const cands = wordCandidates(w);
@@ -185,11 +185,11 @@ export function createCmudict(mapPath) {
     }
 
     const combos = combinePatterns(perWord);
-    if (combos.some(scanConstraint)) return { ok: true };
+    if (combos.some((c) => scanConstraint(c, min, max))) return { ok: true };
 
     const len = combos[0]?.length ?? 0;
-    if (len < 7 || len > 12) {
-      return { ok: false, reason: `${len} syllable(s), needs 7–12 for anapestic meter` };
+    if (len < min || len > max) {
+      return { ok: false, reason: `${len} syllable(s), needs ${min}–${max} for anapestic meter` };
     }
     return {
       ok: false,
@@ -225,6 +225,16 @@ function selftest() {
     return [word, enc.split(";").map((v) => { const [rime, stress] = v.split("|"); return { rime, stress }; })];
   }));
   assert(roundTrip.get("cat")[0].rime === "AE T", "serialize/parse round-trips");
+
+  const funcWordOracle = createCmudict(new URL("file:///nonexistent-for-function-word-only-test"));
+  const sixWords = Array(6).fill("the");
+  const eightWords = Array(8).fill("the");
+  assert(funcWordOracle.scanMeter(eightWords).ok === true, "default scanMeter (7-12) accepts 8 function words — unchanged by parameterization");
+  assert(funcWordOracle.scanMeter(sixWords).ok === false, "default scanMeter (7-12) still rejects 6 function words — unchanged by parameterization");
+  assert(funcWordOracle.scanMeter(sixWords, { min: 5, max: 7 }).ok === true, "scanMeter({min:5,max:7}) accepts 6 function words");
+  const rejected = funcWordOracle.scanMeter(eightWords, { min: 5, max: 7 });
+  assert(rejected.ok === false, "scanMeter({min:5,max:7}) rejects 8 function words");
+  assert(rejected.reason === "8 syllable(s), needs 5–7 for anapestic meter", "rejected scan's reason string uses the passed-in min/max");
 
   console.log("analyzers/cmudict.mjs selftest OK (unit-level; real-map assertions live in comment-in-the-hat's tests/run.sh)");
 }

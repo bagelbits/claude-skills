@@ -1,6 +1,6 @@
 {
   "name": "claude-skills",
-  "description": "Comment-quality enforcement plugins for Claude Code: reap narration/dead-code comments, or require haiku, iambic pentameter, or rhyming couplets.",
+  "description": "Comment-quality enforcement plugins for Claude Code: reap narration/dead-code comments, or require haiku, iambic pentameter, rhyming couplets, or AABBA limericks.",
   "owner": { "name": "bagelbits", "url": "https://github.com/bagelbits" },
   "plugins": [
     {
@@ -30,6 +30,13 @@
       "description": "Blocks new prose comments that don't pair into rhyming anapestic couplets (AABB).",
       "category": "code-quality",
       "keywords": ["comments", "code-quality", "hooks", "pre-commit", "rhyme"]
+    },
+    {
+      "name": "comment-limerick",
+      "source": "./plugins/comment-limerick",
+      "description": "Blocks new prose comments that don't fit AABBA limerick form — five lines, real rhyme, anapestic meter.",
+      "category": "code-quality",
+      "keywords": ["comments", "code-quality", "hooks", "pre-commit", "poetry", "rhyme", "limerick"]
     }
   ]
 }
