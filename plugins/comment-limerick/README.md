@@ -29,6 +29,11 @@ count must be a multiple of five. Lines past the last complete multiple of
 five are flagged as a ragged tail, regardless of their own scan or rhyme —
 finish the limerick, or fold the tail into the one above it.
 
+A standalone one-line `/** ... */` comment counts as a single prose line
+toward that same multiple-of-five requirement — it can never satisfy AABBA
+form alone. Chain five consecutive one-liners, or write a real multi-line
+`/** ... */` block instead.
+
 Meter and rhyme are both decided by the same real pronouncing-dictionary
 oracle `comment-in-the-hat` uses (`vendor/comment-core/analyzers/cmudict.mjs`,
 backed by `vendor/cmudict-map.txt.gz`), not a hand-rolled heuristic.

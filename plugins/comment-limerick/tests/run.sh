@@ -113,6 +113,42 @@ grep -q "6 prose line(s) in this block" "$TMP/out8" && pass "ragged-tail finding
 grep -qF "ragged.ts:3" "$TMP/out8" && fail "1st line of the complete limerick wrongly flagged" || pass "1st line of the complete limerick not flagged"
 grep -qF "ragged.ts:7" "$TMP/out8" && fail "5th line of the complete limerick wrongly flagged" || pass "5th line of the complete limerick not flagged"
 
+echo "== orphan one-liner block comment =="
+# A standalone /** ... */ one-liner previously produced zero findings: it's
+# tagged form: "block" (excluding it from the // line-form check) but
+# blockRuns() never opens a run for a line with both /** and */ on it
+# (excluding it from the grouped shape/rhyme/meter check too), so it fell
+# through both mechanisms. "It crashed every night" is one of the verified
+# namesake lines (6 syllables, a fine limerick B-line in isolation), but
+# alone it is only 1 of the 5 lines a limerick needs.
+echo '{"tool_name":"Write","tool_input":{"file_path":"orphan.ts","content":"const x = 1;\n/** It crashed every night */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/limerick-filter.mjs" > "$TMP/out-orphan1"
+grep -q "orphan.ts:2" "$TMP/out-orphan1" && pass "standalone one-liner block comment now flagged (was silently allowed)" \
+  || fail "standalone one-liner block comment still bypasses the gate"
+grep -q "1 prose line(s) in this block" "$TMP/out-orphan1" && pass "standalone one-liner flagged with the ragged-tail shape reason" \
+  || fail "standalone one-liner missing shape reason: $(cat "$TMP/out-orphan1")"
+
+# Five one-liners on consecutive lines must chain into one complete,
+# correctly-scanning limerick (AABBA) and produce NO findings -- the same
+# verified namesake five lines used elsewhere in this file, just written as
+# five separate one-liner comments instead of one multi-line block.
+echo '{"tool_name":"Write","tool_input":{"file_path":"chained.ts","content":"const x = 1;\n/** There once was a bug in the code */\n/** It broke every build down the road */\n/** It crashed every night */\n/** gave the team quite a fright */\n/** and vanished the moment it showed */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/limerick-filter.mjs" > "$TMP/out-orphan2"
+[ ! -s "$TMP/out-orphan2" ] && pass "five chained one-liners forming a complete limerick produce no output" \
+  || fail "chained one-liner limerick wrongly denied: $(cat "$TMP/out-orphan2")"
+
+# A one-liner with a genuine meter mismatch must still be caught, proving
+# the full per-role meter/rhyme check (not just the shape/count check) runs
+# over one-liner-derived groups. Reuses the already-verified out-of-range
+# B-line fixture (11 syllables, outside the 5-7 B-line window) as one-liner
+# line 3 in an otherwise-conforming 5-line one-liner chain.
+echo '{"tool_name":"Write","tool_input":{"file_path":"chainedbad.ts","content":"const x = 1;\n/** There once was a bug in the code */\n/** It broke every build down the road */\n/** it crashed every single night of the week */\n/** gave the team quite a fright */\n/** and vanished the moment it showed */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/limerick-filter.mjs" > "$TMP/out-orphan3"
+grep -q "chainedbad.ts:4" "$TMP/out-orphan3" && pass "chained one-liner with wrong meter on its line flagged" \
+  || fail "chained one-liner meter mismatch not caught: $(cat "$TMP/out-orphan3")"
+grep -q "11 syllable(s), needs 5–7" "$TMP/out-orphan3" && pass "chained one-liner meter-mismatch finding names the syllable count and window" \
+  || fail "chained one-liner meter-mismatch finding missing detail: $(cat "$TMP/out-orphan3")"
+
 echo "== nantucket: hatch =="
 # A nantucket: line mixed anywhere among the five conforming lines is never
 # scanned and carries no positional requirement -- zero findings.
