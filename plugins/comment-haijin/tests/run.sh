@@ -172,6 +172,40 @@ grep -qF "ragged.ts:4" "$TMP/out7" && fail "second line of the complete haiku wr
 grep -qF "ragged.ts:5" "$TMP/out7" && fail "third line of the complete haiku wrongly flagged" \
   || pass "third line of the complete haiku not flagged"
 
+echo "== orphan one-liner block comment =="
+# A standalone /** ... */ one-liner previously produced zero findings: it's
+# tagged form: "block" (excluding it from the // line-form check) but
+# blockRuns() never opens a run for a line with both /** and */ on it
+# (excluding it from the grouped shape/syllable check too), so it fell
+# through both mechanisms. "an old silent pond" is 5 syllables and is a
+# fine haiku LINE, but alone it is only 1 of the 3 lines a haiku needs.
+echo '{"tool_name":"Write","tool_input":{"file_path":"orphan.ts","content":"const x = 1;\n/** an old silent pond */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out-orphan1"
+grep -q "orphan.ts:2" "$TMP/out-orphan1" && pass "standalone one-liner block comment now flagged (was silently allowed)" \
+  || fail "standalone one-liner block comment still bypasses the gate"
+grep -q "1 prose line(s) in this block" "$TMP/out-orphan1" && pass "standalone one-liner flagged with the ragged-tail shape reason" \
+  || fail "standalone one-liner missing shape reason: $(cat "$TMP/out-orphan1")"
+
+# Three one-liners on consecutive lines must chain into one complete,
+# correctly-scanning haiku (5-7-5) and produce NO findings -- the same
+# verified triple used elsewhere in this file, just written as three
+# separate one-liner comments instead of one multi-line block.
+echo '{"tool_name":"Write","tool_input":{"file_path":"chained.ts","content":"const x = 1;\n/** an old silent pond */\n/** the wind moves across the field */\n/** leaves drift on the pond */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out-orphan2"
+[ ! -s "$TMP/out-orphan2" ] && pass "three chained one-liners forming a complete haiku produce no output" \
+  || fail "chained one-liner haiku wrongly denied: $(cat "$TMP/out-orphan2")"
+
+# A one-liner with a genuine syllable mismatch must still be caught, proving
+# the full per-position 5-7-5 check (not just the shape/count check) runs
+# over one-liner-derived groups. "the wind moves across" is 5 syllables and
+# occupies the 7-syllable (2nd) position of the haiku.
+echo '{"tool_name":"Write","tool_input":{"file_path":"chainedbad.ts","content":"const x = 1;\n/** an old silent pond */\n/** the wind moves across */\n/** leaves drift on the pond */\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out-orphan3"
+grep -q "chainedbad.ts:3" "$TMP/out-orphan3" && pass "chained one-liner with wrong syllable count on its line flagged" \
+  || fail "chained one-liner syllable mismatch not caught"
+grep -q "needs 7" "$TMP/out-orphan3" && pass "chained one-liner syllable-mismatch finding names the needed count" \
+  || fail "chained one-liner syllable-mismatch finding missing detail: $(cat "$TMP/out-orphan3")"
+
 echo "== commit/PR gate =="
 GITTMP=$(mktemp -d)
 git -C "$GITTMP" init -q
