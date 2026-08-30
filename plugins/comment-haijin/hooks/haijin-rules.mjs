@@ -34,7 +34,7 @@ function readLine(raw) {
 
 function shapeReason(n) {
   const need = 3 - (n % 3);
-  let msg = `${n} prose line(s) in this block; a haiku is three lines of 5-7-5, and a sequence a multiple of three — add ${need} more line(s)`;
+  let msg = `${n} prose line(s) in this block; a haiku is three lines of 5-7-5, and a sequence must be a multiple of three — add ${need} more line(s)`;
   if (n > 3) msg += `, or fold ${need === 1 ? "this line" : "these lines"} into the haiku above`;
   return msg;
 }
@@ -45,8 +45,8 @@ export function analyzeLines(file, lines, lineMap) {
   const findings = [];
 
   readings.forEach((r, i) => {
-    if (r.kind === "prose" && r.form === "line") {
-      findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: r.body, reason: LINE_FORM_REASON });
+    if ((r.kind === "prose" || r.kind === "skipped") && r.form === "line") {
+      findings.push({ file, line: lineMap ? lineMap[i] : undefined, text: r.body ?? lines[i].trim(), reason: LINE_FORM_REASON });
     }
   });
 

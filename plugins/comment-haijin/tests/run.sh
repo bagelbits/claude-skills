@@ -58,6 +58,16 @@ echo '{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const x =
   | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out1"
 grep -q "x.ts" "$TMP/out1" && pass "line-form comment denied naming file" || fail "line-form comment not denied"
 
+# Regression: a // line whose content trips the shared UNSPEAKABLE detector
+# (here, a digit) reads as kind "skipped", not "prose" -- the line-form
+# check must still catch it on form alone, before any content scan.
+echo '{"tool_name":"Write","tool_input":{"file_path":"unspeakable.ts","content":"const x = 1;\n// retry after 3 seconds\n"}}' \
+  | node "$PLUGIN_ROOT/hooks/haijin-filter.mjs" > "$TMP/out1b"
+grep -q "unspeakable.ts:2" "$TMP/out1b" && pass "unspeakable // line still denied on form alone" \
+  || fail "unspeakable // line was not denied"
+grep -qF "a line comment cannot carry a haiku" "$TMP/out1b" && pass "unspeakable // line denied with line-form reason" \
+  || fail "unspeakable // line missing line-form reason"
+
 # a verified 5-7-5 triple, counted with the real syllable analyzer before
 # pasting in: "an old silent pond" (5), "the wind moves across the field"
 # (7), "leaves drift on the pond" (5).
