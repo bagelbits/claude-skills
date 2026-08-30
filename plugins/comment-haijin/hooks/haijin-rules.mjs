@@ -6,6 +6,7 @@
 import {
   readLine as coreReadLine,
   blockRuns as blockUnits,
+  oneLinerRuns,
   isCodeFile,
   makeExempt,
   LINE_COMMENT,
@@ -50,7 +51,7 @@ export function analyzeLines(file, lines, lineMap) {
     }
   });
 
-  for (const block of blockUnits(lines, lineMap)) {
+  for (const block of [...blockUnits(lines, lineMap), ...oneLinerRuns(lines, lineMap)]) {
     const proseIdx = block.filter((i) => readings[i].kind === "prose" && readings[i].form === "block");
     if (proseIdx.length === 0) continue;
 
