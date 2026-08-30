@@ -54,10 +54,10 @@ disabling the plugin — the `verse` skill stays available.
 
 This plugin comments in strict iambic pentameter, so it conflicts with any
 other plugin that imposes a different comment form on the same lines: install
-at most one of `comment-bard`, `comment-haijin`, or `comment-in-the-hat` at a
-time. It's also incompatible with `comment-reaper`, which enforces a
-"why, not what" content rule orthogonal to — and sometimes at odds with —
-a fixed syllable count.
+at most one of `comment-bard`, `comment-haijin`, `comment-in-the-hat`, or
+`comment-limerick` at a time. It's also incompatible with `comment-reaper`,
+which enforces a "why, not what" content rule orthogonal to — and sometimes
+at odds with — a fixed syllable count.
 
 ## Development
 
