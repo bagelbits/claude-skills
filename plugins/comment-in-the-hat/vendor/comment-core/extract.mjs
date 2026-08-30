@@ -101,6 +101,30 @@ export function blockRuns(lines, lineMap) {
   return runs;
 }
 
+export function oneLinerRuns(lines, lineMap) {
+  const runs = [];
+  let current = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i].replace(/\r$/, "");
+
+    if (!BLOCK_ONELINE.test(raw)) {
+      current = null;
+      continue;
+    }
+
+    const contiguous = current && (!lineMap || lineMap[i] === lineMap[i - 1] + 1);
+    if (contiguous) {
+      current.push(i);
+    } else {
+      current = [i];
+      runs.push(current);
+    }
+  }
+
+  return runs;
+}
+
 export function commentUnits(readings, lineMap) {
   const units = [];
   let current = null;
@@ -160,6 +184,25 @@ function selftest() {
   const brokenLines = ["/**", " * one", " * two", " */"];
   const brokenRuns = blockRuns(brokenLines, brokenLineMap);
   assert(brokenRuns.length === 0, "non-contiguous lineMap drops the run");
+
+  const oneLinerLines = ["code();", "/** one line block */", "code();"];
+  const isolated = oneLinerRuns(oneLinerLines);
+  assert(isolated.length === 1 && isolated[0].length === 1 && isolated[0][0] === 1, "isolated one-liner is its own run of length 1");
+
+  const chainedLines = ["/** first line here */", "/** second line here */", "code();", "/** third alone */"];
+  const chained = oneLinerRuns(chainedLines);
+  assert(chained.length === 2, "two runs: the adjacent pair, then the lone trailing one-liner");
+  assert(chained[0].length === 2 && chained[0][0] === 0 && chained[0][1] === 1, "adjacent one-liners merge into one run");
+  assert(chained[1].length === 1 && chained[1][0] === 3, "a one-liner separated by a non-one-liner line starts a new run");
+
+  const gappedLineMap = [1, 2, 10];
+  const gappedLines = ["/** first line here */", "/** second line here */", "/** third line here */"];
+  const gapped = oneLinerRuns(gappedLines, gappedLineMap);
+  assert(gapped.length === 2 && gapped[0].length === 2 && gapped[1].length === 1, "a lineMap gap breaks an otherwise-adjacent chain into two runs");
+
+  const multiLineBlockUntouched = ["/**", " * one", " * two", " */", "/** oneliner after */"];
+  const mixed = oneLinerRuns(multiLineBlockUntouched);
+  assert(mixed.length === 1 && mixed[0].length === 1 && mixed[0][0] === 4, "a real multi-line block's lines never match BLOCK_ONELINE, so oneLinerRuns only picks up the trailing one-liner");
 
   const readings = [
     readLine("// a"), readLine("// b"), { kind: "none" }, readLine("// c"),
