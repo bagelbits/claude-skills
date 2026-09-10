@@ -19,6 +19,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Give the runner a git identity for the suite's scratch repos
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
       - name: Run full test suite before tagging
         run: bash scripts/run-plugin-tests.sh
       - name: Tag each plugin at its manifest version
