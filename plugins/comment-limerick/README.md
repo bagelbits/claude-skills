@@ -1,20 +1,35 @@
 # comment-limerick
 
-Blocks new prose comments that don't fit AABBA limerick form — five lines,
-lines 1/2/5 rhyming and scanning as anapestic trimeter (7-10 syllables),
-lines 3/4 rhyming and scanning as anapestic dimeter (5-7 syllables).
-Enforced at write time and at commit/PR time, using the same real CMU
-Pronouncing Dictionary oracle for both, so a comment that passes locally
-can't slip through at commit. No humor requirement — form only.
+A gate for your prose, comment-bound:
+every block must in limericks be found.
+  Five lines is the shape,
+  from which none can escape —
+lines one, two, and five share a sound.
+
+Enforced when you write, and again
+at the commit, the push, and the PR's blend,
+  the very same source —
+  a real CMU force —
+so what passes once passes to the end.
+
+No jury of jokes to convene;
+the gate does not care what you mean.
+  It scores just the shape:
+  the rhyme, and the tape
+of syllables — form, and nothing between.
 
 ## Rule
 
-Prose comments must live inside a `/** ... */` block — a `//` line comment
-is denied on form alone, before content is even checked, since a limerick
-needs five lines and a line comment only ever gives you one.
+A comment in prose has one home:
+`/** ... */`, never to roam.
+  A lone `//` line
+  is refused by design —
+one line cannot build AABBA alone.
 
-Within a block, prose lines group into limericks five at a time, read in
-order:
+Inside of a block, prose divides
+into limericks, five lines each, side by side,
+  and read start to end
+  in the order they send:
 
 | Line | Role | Rhymes with | Meter |
 |---|---|---|---|
@@ -24,45 +39,61 @@ order:
 | 4 | B | 3 | anapestic, 5-7 syllables |
 | 5 | A | 1, 2 | anapestic, 7-10 syllables |
 
-A block can chain multiple limericks in a row; a block's total prose line
-count must be a multiple of five. Lines past the last complete multiple of
-five are flagged as a ragged tail, regardless of their own scan or rhyme —
-finish the limerick, or fold the tail into the one above it.
+A block can chain limericks on through,
+so its prose-line count must divide five clean too.
+  Lines past the last set
+  are a tail, flagged in debt —
+finish the verse, or fold into its view.
 
-A standalone one-line `/** ... */` comment counts as a single prose line
-toward that same multiple-of-five requirement — it can never satisfy AABBA
-form alone. Chain five consecutive one-liners, or write a real multi-line
-`/** ... */` block instead.
+One `/** ... */` line on its own
+still counts toward that same five-line unknown —
+  it can't be complete,
+  AABBA's not neat
+from a soloist standing alone.
 
-Meter and rhyme are both decided by the same real pronouncing-dictionary
-oracle `comment-in-the-hat` uses (`vendor/comment-core/analyzers/cmudict.mjs`,
-backed by `vendor/cmudict-map.txt.gz`), not a hand-rolled heuristic.
+The judge of each rhyme and each beat
+is the oracle `comment-in-the-hat` can't cheat —
+  `cmudict.mjs`,
+  gzipped, terse,
+backed by real speech, not a guess at the feet.
 
 ## The `nantucket:` hatch
 
-A line the oracle can't speak — an identifier, a number, a URL, a code
-snippet — normally just drops out of scanning on its own. But if a comment
-mixes a genuinely unspeakable line with limerick verse, that combination is
-flagged: hoist the unspeakable token out of the way instead. A
-`nantucket:`-prefixed line does that: it's never scanned, and — unlike
-`comment-in-the-hat`'s `cat-in-the-hat:` — it has no positional requirement,
-it can sit anywhere in its comment. Shared markers (`TODO`, `FIXME`, `NOTE`,
-`HACK`, `XXX`, `eslint`/`prettier`/`biome-` directives, `@tag`s, bare URLs)
-are exempt the same way, no prefix needed.
+A line the oracle can't ever say —
+a URL, a number, an ID astray —
+  just drops out of view,
+  scored not false, not true,
+unless it sits tangled in verse on its way.
+
+Then `nantucket:` pulls it aside,
+free to sit anywhere, nothing denied —
+  not pinned like the hat's
+  `cat-in-the-hat:` stats.
+Shared markers get this pass too, codified:
+`TODO`, `FIXME`, `NOTE`, `HACK`, `XXX`,
+lint directives, an `@tag`, a URL's mess.
 
 ## No humor requirement
 
-The gate checks rhyme and meter only. A limerick that scans and rhymes but
-isn't funny still passes.
+The gate has one job, and it's plain:
+score the rhyme and the meter, no more to explain.
+  A limerick that's dry,
+  scanning true, rhyming spry,
+still passes — no wit need remain.
 
 ## Skill
 
-`nantucket` — rewrites existing comments into AABBA limericks: converting
-stray prose into complete five-line limericks, completing a short group,
-fixing meter per line-role, fixing rhyme, and re-hoisting `nantucket:` lines
-that ended up mixed into scanned content. It verifies every rewrite through
-the same real oracle the gate uses (`oracle.scanMeter`, `oracle.rhymes`)
-rather than trusting scansion by ear, and reports exactly what changed.
+`nantucket` takes prose gone astray
+and rebuilds it in full AABBA array —
+  completes a short set,
+  fixes meter, rhyme debt,
+and re-hoists stray tokens back out of the way.
+
+Each fix it reports is verified
+through that same real oracle, not eyeballed, not tried
+  by ear or by guess —
+  `scanMeter`, no less,
+and `rhymes`, with the changes all clearly supplied.
 
 ## Turning Off The Gate
 
@@ -78,19 +109,34 @@ without disabling the plugin — the `nantucket` skill stays available.
 
 ## Compatibility
 
-This plugin imposes its own fixed verse form on comments, so it conflicts
-with any other plugin that imposes a different one on the same lines:
-install at most one of `comment-bard`, `comment-haijin`, `comment-in-the-hat`,
-or `comment-limerick` at a time. It's also incompatible with
-`comment-reaper`, which enforces a "why, not what" content rule orthogonal
-to — and sometimes at odds with — a fixed verse form.
+One verse form is all it allows,
+so it clashes with siblings who'd force other vows —
+  `comment-bard`, `-haijin`,
+  `-in-the-hat` — pick one champion,
+just a single fixed form on each house.
+
+And `comment-reaper` won't get along either:
+"why, not what" is a rule form can't wither —
+  a fixed shape and a prune
+  are two different tunes,
+sometimes matched, sometimes pulling in neither.
 
 ## Development
 
-`vendor/comment-core` is a synced copy of `packages/comment-core` — edit the
-canonical package, then run `node scripts/sync-comment-core.mjs` from the
-repo root. `vendor/cmudict-map.txt.gz`, `vendor/LICENSE-cmudict`, and
-`vendor/VENDOR.md` are plugin-local and untouched by that sync — see
-`vendor/VENDOR.md` if the pinned CMU dictionary commit ever needs to move.
-`tests/run.sh` is the spec-as-tests, including real-oracle assertions
-against the vendored map itself; run it after any change here.
+`vendor/comment-core` mirrors the true
+canonical `packages/comment-core` view —
+  edit that one instead,
+  then let sync run ahead:
+`node scripts/sync-comment-core.mjs` will do.
+
+`vendor/cmudict-map.txt.gz`,
+`LICENSE-cmudict`, and `VENDOR.md` stay
+  plugin-local and still,
+  untouched by that drill —
+see `VENDOR.md` if the pin drifts away.
+
+`tests/run.sh` is the spec, cast as tests,
+oracle-backed, against the map it invests —
+  run it after each change
+  to keep the gate's range
+honest, verified, passing its quests.
