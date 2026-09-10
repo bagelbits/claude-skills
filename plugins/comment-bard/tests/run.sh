@@ -33,7 +33,9 @@ const matchers = hooks.hooks.PreToolUse.map(e => e.matcher);
 if (!matchers.includes("Write|Edit|MultiEdit|NotebookEdit")) { console.error("missing write matcher"); ok = false; }
 if (!matchers.includes("mcp__plugin_github_github__create_pull_request")) { console.error("missing gh-mcp matcher"); ok = false; }
 const bash = hooks.hooks.PreToolUse.filter(e => e.matcher === "Bash");
-if (bash.length !== 2 || new Set(bash.map(e => e.if)).size !== 2) { console.error("Bash entries not distinct"); ok = false; }
+if (bash.length !== 1) { console.error("expected exactly one Bash entry, got " + bash.length); ok = false; }
+const unknown = hooks.hooks.PreToolUse.flatMap(e => Object.keys(e)).filter(k => k !== "matcher" && k !== "hooks");
+if (unknown.length) { console.error("unsupported hook entry keys: " + unknown.join(", ")); ok = false; }
 process.exit(ok ? 0 : 1);
 ' "$PLUGIN_ROOT" && pass "hooks.json wiring" || fail "hooks.json wiring"
 
@@ -146,14 +148,24 @@ grep -q "not meterable, yet a line in the same block scans" "$TMP/out7" && pass 
   || fail "mixed-block finding missing its reason"
 
 echo "== commit/PR gate =="
+COMMIT_PAYLOAD='{"tool_name":"Bash","tool_input":{"command":"git commit -m wip"}}'
 GITTMP=$(mktemp -d)
 git -C "$GITTMP" init -q
 git -C "$GITTMP" checkout -q -b main
 git -C "$GITTMP" commit -q --allow-empty -m base
 printf 'const x = 1;\n// this short line here will not scan today\n' > "$GITTMP/a.ts"
 git -C "$GITTMP" add a.ts
-OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$GITTMP" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 echo "$OUT" | grep -q "a.ts" && pass "violating branch denied naming file" || fail "violating branch not denied"
+
+OUT=$(cd "$GITTMP" && echo '{"tool_name":"Bash","tool_input":{"command":"npm test"}}' | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+[ -z "$OUT" ] && pass "unrelated Bash command skips the branch scan" || fail "unrelated Bash command still scanned the branch"
+
+OUT=$(cd "$GITTMP" && echo '{"tool_name":"mcp__plugin_github_github__create_pull_request","tool_input":{}}' | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+echo "$OUT" | grep -q "a.ts" && pass "gh MCP pull-request tool still scans the branch" || fail "gh MCP pull-request tool did not scan"
+
+OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs" < /dev/null)
+[ -z "$OUT" ] && pass "empty payload fails open" || fail "empty payload produced output"
 
 # a.ts was staged but never committed -- `git checkout -b` carries the index
 # forward, so without this reset it would still show up (and still violate)
@@ -163,11 +175,11 @@ git -C "$GITTMP" reset --hard -q
 git -C "$GITTMP" checkout -q -b clean-branch main
 printf 'const y = 2;\n' > "$GITTMP/b.ts"
 git -C "$GITTMP" add b.ts
-OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$GITTMP" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 [ -z "$OUT" ] && pass "clean branch produces no output" || fail "clean branch produced output"
 
 NOTGIT=$(mktemp -d)
-OUT=$(cd "$NOTGIT" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$NOTGIT" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 [ -z "$OUT" ] && pass "outside git repo fails open" || fail "outside git repo produced output"
 
 git -C "$GITTMP" checkout -q -b hostile main
@@ -179,7 +191,7 @@ git -C "$GITTMP" config color.ui always
 mkdir -p "$GITTMP/sub"
 printf 'const x = 1;\n// this short line here will not scan today\n' > "$GITTMP/sub/c.ts"
 git -C "$GITTMP" add sub/c.ts
-OUT=$(cd "$GITTMP/sub" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$GITTMP/sub" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 echo "$OUT" | grep -q "sub/c.ts" && pass "hostile diff config still denies with correct path" || fail "hostile diff config broke path resolution: $OUT"
 git -C "$GITTMP" reset --hard -q
 
@@ -189,7 +201,7 @@ git -C "$GITTMP" reset --hard -q
 git -C "$GITTMP" checkout -q -b spacey main
 printf 'const x = 1;\n// this short line here will not scan today\n' > "$GITTMP/my file.ts"
 git -C "$GITTMP" add "my file.ts"
-OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$GITTMP" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 echo "$OUT" | grep -q "my file.ts:2" && pass "space-containing filename denied with tab stripped, not corrupted" \
   || fail "space-containing filename mishandled: $OUT"
 git -C "$GITTMP" reset --hard -q
@@ -206,7 +218,7 @@ git -C "$GITTMP" config core.quotePath true
 printf 'const y = 2;\n// this short line here will not scan today\n' > "$GITTMP/café.ts"
 printf 'const z = 3;\n// the count comes up short of what we need\n' > "$GITTMP/normal.ts"
 git -C "$GITTMP" add "café.ts" normal.ts
-OUT=$(cd "$GITTMP" && node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
+OUT=$(cd "$GITTMP" && echo "$COMMIT_PAYLOAD" | node "$PLUGIN_ROOT/hooks/pre-pr-bard-check.mjs")
 echo "$OUT" | grep -q "adds 2 line(s) that don't scan" && pass "non-ASCII + normal filename: both findings counted, none dropped" \
   || fail "non-ASCII + normal filename: wrong finding count: $OUT"
 echo "$OUT" | grep -qF 'café.ts:2 — 9 syllable(s), needs 10 (this/1 short/1 line/1 here/1 will/1 not/1 scan/1 today/2): \"this short line here will not scan today\"' && pass "non-ASCII filename correctly attributed its own finding" \
@@ -266,7 +278,7 @@ process.stdout.write(entry.hooks[0].command);
 ' "$PLUGIN_ROOT/hooks/hooks.json")
 COMMIT_CMD=$(node -e '
 const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-const entry = hooks.hooks.PreToolUse.find(e => e.matcher === "Bash" && e.if === "Bash(git commit*)");
+const entry = hooks.hooks.PreToolUse.find(e => e.matcher === "Bash");
 process.stdout.write(entry.hooks[0].command);
 ' "$PLUGIN_ROOT/hooks/hooks.json")
 
@@ -288,11 +300,11 @@ git -C "$GATE_GITTMP" commit -q --allow-empty -m base
 printf 'const x = 1;\n// this short line here will not scan today\n' > "$GATE_GITTMP/a.ts"
 git -C "$GATE_GITTMP" add a.ts
 
-OUT=$(cd "$GATE_GITTMP" && CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" COMMENT_BARD_OFF=1 bash -c "$COMMIT_CMD")
+OUT=$(cd "$GATE_GITTMP" && echo "$COMMIT_PAYLOAD" | CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" COMMENT_BARD_OFF=1 bash -c "$COMMIT_CMD")
 [ -z "$OUT" ] && pass "COMMENT_BARD_OFF=1 bypasses commit gate (no output)" \
   || fail "COMMENT_BARD_OFF=1 did not bypass commit gate: $OUT"
 
-OUT=$(cd "$GATE_GITTMP" && CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash -c "$COMMIT_CMD")
+OUT=$(cd "$GATE_GITTMP" && echo "$COMMIT_PAYLOAD" | CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash -c "$COMMIT_CMD")
 echo "$OUT" | grep -q "a.ts" && pass "commit gate still denies with COMMENT_BARD_OFF unset" \
   || fail "commit gate did not deny with COMMENT_BARD_OFF unset"
 

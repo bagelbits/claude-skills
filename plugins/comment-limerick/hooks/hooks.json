@@ -15,20 +15,6 @@
       },
       {
         "matcher": "Bash",
-        "if": "Bash(git commit*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$COMMENT_LIMERICK_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-limerick-check.mjs\" || exit 0",
-            "commandWindows": "if ($env:COMMENT_LIMERICK_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-limerick-check.mjs\" }",
-            "statusMessage": "comment-limerick: checking branch diff for AABBA limerick form…",
-            "timeout": 20
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "if": "Bash(gh pr create*)",
         "hooks": [
           {
             "type": "command",

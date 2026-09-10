@@ -15,20 +15,6 @@
       },
       {
         "matcher": "Bash",
-        "if": "Bash(git commit*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$COMMENT_HAT_OFF\" ] && exit 0; command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-hat-check.mjs\" || exit 0",
-            "commandWindows": "if ($env:COMMENT_HAT_OFF) { exit 0 }; if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-hat-check.mjs\" }",
-            "statusMessage": "comment-in-the-hat: checking branch diff for AABB couplet form…",
-            "timeout": 20
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "if": "Bash(gh pr create*)",
         "hooks": [
           {
             "type": "command",
