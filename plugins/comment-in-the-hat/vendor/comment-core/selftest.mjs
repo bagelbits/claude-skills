@@ -4,7 +4,7 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const modules = [
-  "extract.mjs", "diff.mjs", "deny.mjs",
+  "extract.mjs", "diff.mjs", "deny.mjs", "hook.mjs",
   "analyzers/syllable.mjs", "analyzers/cmudict.mjs",
 ];
 

@@ -1,7 +1,7 @@
 {
   "name": "comment-reaper",
   "description": "Blocks new comments that narrate code or hide commented-out dead code; keeps the non-obvious-why house rule.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": { "name": "bagelbits", "email": "cdurianward@gmail.com" },
   "repository": "https://github.com/bagelbits/claude-skills",
   "license": "MIT",

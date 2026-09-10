@@ -15,20 +15,6 @@
       },
       {
         "matcher": "Bash",
-        "if": "Bash(git commit*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-pr-reaper-check.mjs\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre-pr-reaper-check.mjs\" }",
-            "statusMessage": "comment-reaper: checking branch diff for what-not-why violations…",
-            "timeout": 20
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "if": "Bash(gh pr create*)",
         "hooks": [
           {
             "type": "command",

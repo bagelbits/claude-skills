@@ -1,12 +1,10 @@
-import { branchDiff, deny } from "../vendor/comment-core/index.mjs";
+import { branchDiff, deny, firesBranchGate, readPayload } from "../vendor/comment-core/index.mjs";
 import { analyzeDiff, denyReason } from "./reaper-rules.mjs";
 
-try {
+readPayload((payload) => {
+  if (!firesBranchGate(payload)) return;
   const base = branchDiff();
-  if (!base) process.exit(0);
+  if (!base) return;
   const findings = analyzeDiff(base.diff);
   if (findings.length > 0) deny(denyReason(findings, "the branch diff"));
-  process.exit(0);
-} catch {
-  process.exit(0);
-}
+});
