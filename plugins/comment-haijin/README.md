@@ -63,6 +63,10 @@ counter (`vendor/comment-core/analyzers/syllable.mjs`) rather than trusting
 a hand count, and reports exactly what changed. Invoke it to fix reported
 violations or to haiku-ify a file ahead of time.
 
+`haiku-pr-comment` — formats a PR review (verdict plus per-finding inline comments) as
+haiku without losing technical substance, then posts it as one review via
+the GitHub reviews API after a preview.
+
 ## Turning Off The Gate
 
 Set `COMMENT_HAIKU_OFF=1` to silence the write and commit/PR gates without
