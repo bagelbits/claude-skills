@@ -95,6 +95,10 @@ through that same real oracle, not eyeballed, not tried
   `scanMeter`, no less,
 and `rhymes`, with the changes all clearly supplied.
 
+`nantucket-pr-comment` — formats a PR review (verdict plus per-finding inline comments) as
+AABBA limericks without losing technical substance, then posts it as one review via
+the GitHub reviews API after a preview.
+
 ## Turning Off The Gate
 
 Set `COMMENT_LIMERICK_OFF=1` to silence the write and commit/PR gates

@@ -38,6 +38,10 @@ Two kinds of line are never checked for meter:
 rewrite through the real syllable counter rather than a hand count. Invoke
 it to fix reported violations or to versify a file ahead of time.
 
+`verse-pr-comment` — formats a PR review (verdict plus per-finding inline comments) as
+iambic-pentameter couplets without losing technical substance, then posts it as one review via
+the GitHub reviews API after a preview.
+
 ## Turning Off The Gate
 
 Set `COMMENT_BARD_OFF=1` to silence the write and commit/PR gates without
